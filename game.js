@@ -60,29 +60,26 @@ function create() {
 	let right = game.input.keyboard.addKey( Phaser.Keyboard.RIGHT );
 	let left = game.input.keyboard.addKey( Phaser.Keyboard.LEFT );
 
-	up.onDown.add( () => { sprite.y -= grid_square_length; sprite.angle = 270 }, this );
-	down.onDown.add( () => { sprite.y += grid_square_length; sprite.angle = 90 }, this );
-	right.onDown.add( () => { sprite.x += grid_square_length; sprite.angle = 0 }, this );
-	left.onDown.add( () => { sprite.x -= grid_square_length; sprite.angle = 180 }, this );
+	up.onDown.add( () => {
+		sprite.y -= ( ( sprite.y - grid_square_length ) < 0 ) ? 0 : grid_square_length;
+		sprite.angle = 270;
+	}, this );
+	down.onDown.add( () => {
+		sprite.y += ( ( sprite.y + grid_square_length ) > game.height ) ? 0 : grid_square_length;
+		sprite.angle = 90;
+	}, this );
+	right.onDown.add( () => {
+		sprite.x += ( ( sprite.x + grid_square_length ) > game.width ) ? 0 : grid_square_length;
+		sprite.angle = 0;
+	}, this );
+	left.onDown.add( () => {
+		sprite.x -= ( ( sprite.x - grid_square_length ) < 0 ) ? 0 : grid_square_length;
+		sprite.angle = 180;
+	}, this );
 
 }
 
-function update() {
-	screenWrap( sprite );
-}
+function update() {}
 
-function screenWrap( sprite ) {
-
-	if ( sprite.x < 0 )
-		sprite.x = game.width;
-	else if ( sprite.x > game.width )
-		sprite.x = 0;
-
-	if ( sprite.y < 0 )
-		sprite.y = game.height;
-	else if ( sprite.y > game.height )
-		sprite.y = 0;
-
-}
 
 function render() {}
