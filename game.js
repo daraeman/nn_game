@@ -1,8 +1,10 @@
 const viewport_width = 19;
 const viewport_height = 11;
-const grid_width = 200;
-const grid_height = 200;
+const grid_width = 21;
+const grid_height = 13;
 const grid_square_length = 50;
+const game_height_pixels = ( grid_height * grid_square_length );
+const game_width_pixels = ( grid_width * grid_square_length );
 const game = new Phaser.Game( ( viewport_width * grid_square_length ), ( viewport_height * grid_square_length ), Phaser.CANVAS, "container", { preload: preload, create: create, update: update, render: render });
 
 function preload() {
@@ -21,11 +23,7 @@ let ship_width = 50;
 let ship_height = ship_width;
 
 function addGrid() {
-	for ( let x = 0; x < grid_width; x++ ) {
-		for ( let y = 0; y < grid_width; y++ ) {
-			game.add.sprite( ( x * grid_square_length ), ( y * grid_square_length ), "grid" );
-		}
-	}
+	game.add.tileSprite( 0, 0, game_width_pixels, game_height_pixels, "grid" );
 }
 
 function addPlanets() {
@@ -36,9 +34,37 @@ function addPlanets() {
 function addShip() {
 	sprite = game.add.sprite( ( ( 2 * grid_square_length ) - ( ship_width * 0.5 ) ), ( ( 6 * grid_square_length ) - ( ship_height * 0.5 ) ), "ship" );
 	sprite.anchor.set( 0.5 );
-	game.physics.enable( sprite, Phaser.Physics.ARCADE );
-	sprite.body.drag.set( 100 );
-	sprite.body.maxVelocity.set( 200 );
+}
+
+const camera_bounds = {
+	x: {
+		min: ( ( game.width / 2 ) - grid_square_length ),
+		max: ( game_width_pixels - ( game.width / 2 ) ),
+	},
+	y: {
+		min: ( ( game.height / 2 ) - grid_square_length ),
+		max: ( game_height_pixels - ( game.height / 2 ) ),
+	}
+};
+function updateCamera( x, y ) {
+	if ( y > camera_bounds.y.min ) {
+		if ( y < camera_bounds.y.max )
+			game.camera.y = ( y - ( game.height / 2 ) + ( grid_square_length / 2 ) );
+		else
+			game.camera.y = ( camera_bounds.y.max - ( game.height / 2 ) + ( grid_square_length / 2 ) );
+	}
+	else {
+		game.camera.y = 0;
+	}
+	if ( x > camera_bounds.x.min ) {
+		if ( x < camera_bounds.x.max )
+			game.camera.x = ( x - ( game.width / 2 ) + ( grid_square_length / 2 ) );
+		else
+			game.camera.x = ( camera_bounds.x.max - ( game.width / 2 ) + ( grid_square_length / 2 ) );
+	}
+	else {
+		game.camera.x = 0;
+	}
 }
 
 function addControls() {
@@ -47,30 +73,36 @@ function addControls() {
 	game.input.keyboard.addKey( Phaser.Keyboard.UP ).onDown.add( () => {
 		sprite.y -= ( ( sprite.y - grid_square_length ) < 0 ) ? 0 : grid_square_length;
 		sprite.angle = 270;
+		updateCamera( ( sprite.x - ( grid_square_length / 2 ) ), ( sprite.y - ( grid_square_length / 2 ) ) );
 	}, this );
 
 	// down
 	game.input.keyboard.addKey( Phaser.Keyboard.DOWN ).onDown.add( () => {
-		sprite.y += ( ( sprite.y + grid_square_length ) > ( grid_height * grid_square_length ) ) ? 0 : grid_square_length;
+		sprite.y += ( ( sprite.y + grid_square_length ) > game_height_pixels ) ? 0 : grid_square_length;
 		sprite.angle = 90;
+		updateCamera( ( sprite.x - ( grid_square_length / 2 ) ), ( sprite.y - ( grid_square_length / 2 ) ) );
 	}, this );
 
 	// right
 	game.input.keyboard.addKey( Phaser.Keyboard.RIGHT ).onDown.add( () => {
-		sprite.x += ( ( sprite.x + grid_square_length ) > ( grid_width * grid_square_length ) ) ? 0 : grid_square_length;
+		sprite.x += ( ( sprite.x + grid_square_length ) > game_width_pixels ) ? 0 : grid_square_length;
 		sprite.angle = 0;
+		updateCamera( ( sprite.x - ( grid_square_length / 2 ) ), ( sprite.y - ( grid_square_length / 2 ) ) );
 	}, this );
 
 	// left
 	game.input.keyboard.addKey( Phaser.Keyboard.LEFT ).onDown.add( () => {
 		sprite.x -= ( ( sprite.x - grid_square_length ) < 0 ) ? 0 : grid_square_length;
 		sprite.angle = 180;
+		updateCamera( ( sprite.x - ( grid_square_length / 2 ) ), ( sprite.y - ( grid_square_length / 2 ) ) );
 	}, this );
 }
 
 function create() {
 
-	game.world.resize( (grid_width * 400), (grid_height * 400) );
+	//game.world.resize( ( grid_width * grid_square_length ), ( grid_height * grid_square_length ) );
+
+	game.world.setBounds( 0, 0, game_width_pixels, game_height_pixels );
 
 	//  This will run in Canvas mode, so let"s gain a little speed and display
 	game.renderer.clearBeforeRender = false;
@@ -80,7 +112,7 @@ function create() {
 	game.physics.startSystem( Phaser.Physics.ARCADE );
 
 	//  A spacey background
-	game.add.tileSprite( 0, 0, game.width, game.height, "space" );
+	game.add.tileSprite( 0, 0, game_width_pixels, game_height_pixels, "space" );
 
 	addGrid();
 	addPlanets();
