@@ -1,7 +1,9 @@
-const grid_width = 19;
-const grid_height = 11;
+const viewport_width = 19;
+const viewport_height = 11;
+const grid_width = 200;
+const grid_height = 200;
 const grid_square_length = 50;
-const game = new Phaser.Game( (grid_width * grid_square_length), (grid_height * grid_square_length), Phaser.CANVAS, "container", { preload: preload, create: create, update: update, render: render });
+const game = new Phaser.Game( ( viewport_width * grid_square_length ), ( viewport_height * grid_square_length ), Phaser.CANVAS, "container", { preload: preload, create: create, update: update, render: render });
 
 function preload() {
 
@@ -39,7 +41,36 @@ function addShip() {
 	sprite.body.maxVelocity.set( 200 );
 }
 
+function addControls() {
+
+	// up
+	game.input.keyboard.addKey( Phaser.Keyboard.UP ).onDown.add( () => {
+		sprite.y -= ( ( sprite.y - grid_square_length ) < 0 ) ? 0 : grid_square_length;
+		sprite.angle = 270;
+	}, this );
+
+	// down
+	game.input.keyboard.addKey( Phaser.Keyboard.DOWN ).onDown.add( () => {
+		sprite.y += ( ( sprite.y + grid_square_length ) > ( grid_height * grid_square_length ) ) ? 0 : grid_square_length;
+		sprite.angle = 90;
+	}, this );
+
+	// right
+	game.input.keyboard.addKey( Phaser.Keyboard.RIGHT ).onDown.add( () => {
+		sprite.x += ( ( sprite.x + grid_square_length ) > ( grid_width * grid_square_length ) ) ? 0 : grid_square_length;
+		sprite.angle = 0;
+	}, this );
+
+	// left
+	game.input.keyboard.addKey( Phaser.Keyboard.LEFT ).onDown.add( () => {
+		sprite.x -= ( ( sprite.x - grid_square_length ) < 0 ) ? 0 : grid_square_length;
+		sprite.angle = 180;
+	}, this );
+}
+
 function create() {
+
+	game.world.resize( (grid_width * 400), (grid_height * 400) );
 
 	//  This will run in Canvas mode, so let"s gain a little speed and display
 	game.renderer.clearBeforeRender = false;
@@ -54,28 +85,7 @@ function create() {
 	addGrid();
 	addPlanets();
 	addShip();
-
-	let up = game.input.keyboard.addKey( Phaser.Keyboard.UP );
-	let down = game.input.keyboard.addKey( Phaser.Keyboard.DOWN );
-	let right = game.input.keyboard.addKey( Phaser.Keyboard.RIGHT );
-	let left = game.input.keyboard.addKey( Phaser.Keyboard.LEFT );
-
-	up.onDown.add( () => {
-		sprite.y -= ( ( sprite.y - grid_square_length ) < 0 ) ? 0 : grid_square_length;
-		sprite.angle = 270;
-	}, this );
-	down.onDown.add( () => {
-		sprite.y += ( ( sprite.y + grid_square_length ) > game.height ) ? 0 : grid_square_length;
-		sprite.angle = 90;
-	}, this );
-	right.onDown.add( () => {
-		sprite.x += ( ( sprite.x + grid_square_length ) > game.width ) ? 0 : grid_square_length;
-		sprite.angle = 0;
-	}, this );
-	left.onDown.add( () => {
-		sprite.x -= ( ( sprite.x - grid_square_length ) < 0 ) ? 0 : grid_square_length;
-		sprite.angle = 180;
-	}, this );
+	addControls();
 
 }
 
