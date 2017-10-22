@@ -14,6 +14,7 @@ function preload() {
 	game.load.image( "grid", "img/ascii/grid_square.png" );
 	game.load.image( "planet_a", "img/ascii/a.png" );
 	game.load.image( "planet_b", "img/ascii/b.png" );
+	game.load.image( "fog_of_war", "img/ascii/fog_of_war.png" );
 
 }
 
@@ -25,9 +26,26 @@ let ship_width = 50;
 let ship_height = ship_width;
 let max_fuel = 20;
 let fuel = 20;
+let fog_of_war_radius = 5;
+let fog_of_war_radius_pixels = ( fog_of_war_radius * grid_square_length );
+let sprites = {};
+let fog_of_war_sprite_group;
 
 function addGrid() {
 	game.add.tileSprite( 0, 0, game_width_pixels, game_height_pixels, "grid" );
+}
+
+function addFogOfWar() {
+	fog_of_war_sprite_group = game.add.group();
+	sprites.fog_of_war = [];
+	for ( let x = 0; x < grid_width; x++ ) {
+		sprites.fog_of_war.push( [] );
+		for ( let y = 0; y < grid_height; y++ ) {
+			let sprite = game.add.sprite( ( x * grid_square_length ), ( y * grid_square_length ), "fog_of_war" );
+			sprites.fog_of_war[ x ].push( sprite );
+			fog_of_war_sprite_group.add( sprites.fog_of_war[ x ][ y ] );
+		}
+	}
 }
 
 function addPlanets() {
@@ -86,41 +104,53 @@ function addControls() {
 	// up
 	game.input.keyboard.addKey( Phaser.Keyboard.UP ).onDown.add( () => {
 		checkPosition();
-		if ( needsFuel() && ! hasFuel() )
+		if ( needsFuel() && ! hasFuel() ) {
+			console.log( "No Fuel" );
 			return;
+		}
 		ship.y -= ( ( ship.y - grid_square_length ) < 0 ) ? 0 : grid_square_length;
 		ship.angle = 270;
 		updateCamera( ( ship.x - ( grid_square_length / 2 ) ), ( ship.y - ( grid_square_length / 2 ) ) );
+		updateFogOfWar();
 	}, this );
 
 	// down
 	game.input.keyboard.addKey( Phaser.Keyboard.DOWN ).onDown.add( () => {
 		checkPosition();
-		if ( needsFuel() && ! hasFuel() )
+		if ( needsFuel() && ! hasFuel() ) {
+			console.log( "No Fuel" );
 			return;
+		}
 		ship.y += ( ( ship.y + grid_square_length ) > game_height_pixels ) ? 0 : grid_square_length;
 		ship.angle = 90;
 		updateCamera( ( ship.x - ( grid_square_length / 2 ) ), ( ship.y - ( grid_square_length / 2 ) ) );
+		updateFogOfWar();
 	}, this );
 
 	// right
 	game.input.keyboard.addKey( Phaser.Keyboard.RIGHT ).onDown.add( () => {
 		checkPosition();
-		if ( needsFuel() && ! hasFuel() )
+		if ( needsFuel() && ! hasFuel() ) {
+			console.log( "No Fuel" );
 			return;
+		}
 		ship.x += ( ( ship.x + grid_square_length ) > game_width_pixels ) ? 0 : grid_square_length;
 		ship.angle = 0;
 		updateCamera( ( ship.x - ( grid_square_length / 2 ) ), ( ship.y - ( grid_square_length / 2 ) ) );
+		updateFogOfWar();
 	}, this );
 
 	// left
 	game.input.keyboard.addKey( Phaser.Keyboard.LEFT ).onDown.add( () => {
 		checkPosition();
-		if ( needsFuel() && ! hasFuel() )
+		if ( needsFuel() && ! hasFuel() ) {
+			console.log( "No Fuel" );
 			return;
+		}
 		ship.x -= ( ( ship.x - grid_square_length ) < 0 ) ? 0 : grid_square_length;
 		ship.angle = 180;
 		updateCamera( ( ship.x - ( grid_square_length / 2 ) ), ( ship.y - ( grid_square_length / 2 ) ) );
+		updateFogOfWar();
 	}, this );
 }
 
@@ -132,7 +162,7 @@ function updateFuel( increment, set ) {
 
 	if ( fuel < 0 )
 		fuel = 0;
-	
+
 	console.log( "Fuel [%s]", fuel );
 }
 
@@ -158,9 +188,33 @@ function checkPosition() {
 		updateFuel( -1 );
 }
 
-function create() {
+/*
+	checks fog_of_war_radius + 1 squares around ship and updates visibility
+	the "+ 1" is to hide the previous moves squares that are no longer in range
+	if one pixel is within the radius, the square is revealed
+*/
+function updateFogOfWar() {
+	let ship_x = ( ship.x - ( grid_square_length / 2 ) );
+	let ship_y = ( ship.y - ( grid_square_length / 2 ) );
+	let min_x_pixels = Math.max( 0, ( ship_x - fog_of_war_radius_pixels - grid_square_length ) );
+	let min_y_pixels = Math.max( 0, ( ship_y - fog_of_war_radius_pixels - grid_square_length ) );
+	let max_x_pixels = Math.max( game_width_pixels, ( ship_x + fog_of_war_radius_pixels + grid_square_length ) );
+	let max_y_pixels = Math.max( game_height_pixels, ( ship_y + fog_of_war_radius_pixels + grid_square_length ) );
+	let min_x = Math.ceil( min_x_pixels / grid_square_length );
+	let min_y = Math.ceil( min_y_pixels / grid_square_length );
+	let max_x = Math.floor( max_x_pixels / grid_square_length );
+	let max_y = Math.floor( max_y_pixels / grid_square_length );
+	for ( let x = min_x; x < max_x; x++ ) {
+		for ( let y = min_y; y < max_y; y++ ) {
+			let closest_x = ( ship_x > x ) ? ( x * grid_square_length ) : ( ( x - 1 ) * grid_square_length );
+			let closest_y = ( ship_y > y ) ? ( y * grid_square_length ) : ( ( y - 1 ) * grid_square_length );
+			let is_inside = ( ( Math.pow( ( closest_x - ship_x ), 2 ) + Math.pow( ( closest_y - ship_y ), 2 ) ) < Math.pow( fog_of_war_radius_pixels, 2 ) );
+			sprites.fog_of_war[ x ][ y ].visible = ! is_inside;
+		}
+	}
+}
 
-	//game.world.resize( ( grid_width * grid_square_length ), ( grid_height * grid_square_length ) );
+function create() {
 
 	game.world.setBounds( 0, 0, game_width_pixels, game_height_pixels );
 
@@ -176,6 +230,7 @@ function create() {
 
 	addGrid();
 	addPlanets();
+	addFogOfWar();
 	addShip();
 	addControls();
 
