@@ -198,12 +198,15 @@ function updateFogOfWar() {
 	let ship_y = ( ship.y - ( grid_square_length / 2 ) );
 	let min_x_pixels = Math.max( 0, ( ship_x - fog_of_war_radius_pixels - grid_square_length ) );
 	let min_y_pixels = Math.max( 0, ( ship_y - fog_of_war_radius_pixels - grid_square_length ) );
-	let max_x_pixels = Math.max( game_width_pixels, ( ship_x + fog_of_war_radius_pixels + grid_square_length ) );
-	let max_y_pixels = Math.max( game_height_pixels, ( ship_y + fog_of_war_radius_pixels + grid_square_length ) );
+	let max_x_pixels = Math.min( game_width_pixels, ( ship_x + fog_of_war_radius_pixels + grid_square_length ) );
+	let max_y_pixels = Math.min( game_height_pixels, ( ship_y + fog_of_war_radius_pixels + grid_square_length ) );
 	let min_x = Math.ceil( min_x_pixels / grid_square_length );
 	let min_y = Math.ceil( min_y_pixels / grid_square_length );
 	let max_x = Math.floor( max_x_pixels / grid_square_length );
 	let max_y = Math.floor( max_y_pixels / grid_square_length );
+	console.log( "max_x", max_x )
+	console.log( "max_y", max_y )
+	console.log( "sprites.fog_of_war.length", sprites.fog_of_war.length )
 	for ( let x = min_x; x < max_x; x++ ) {
 		for ( let y = min_y; y < max_y; y++ ) {
 			let closest_x = ( ship_x > x ) ? ( x * grid_square_length ) : ( ( x - 1 ) * grid_square_length );
