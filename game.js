@@ -17,23 +17,37 @@ function preload() {
 
 }
 
-let sprite;
 let cursors;
+let ship;
+let planet_a;
+let planet_b;
 let ship_width = 50;
 let ship_height = ship_width;
+let max_fuel = 20;
+let fuel = 20;
 
 function addGrid() {
 	game.add.tileSprite( 0, 0, game_width_pixels, game_height_pixels, "grid" );
 }
 
 function addPlanets() {
-	game.add.sprite( ( 1 * grid_square_length ), ( 5 * grid_square_length ), "planet_a" );
-	game.add.sprite( ( 17 * grid_square_length ), ( 5 * grid_square_length ), "planet_b" );
+	planet_a = game.add.sprite( ( 1 * grid_square_length ), ( 5 * grid_square_length ), "planet_a" );
+	addPlanetInfo( planet_a );
+	planet_b = game.add.sprite( ( 17 * grid_square_length ), ( 5 * grid_square_length ), "planet_b" );
+	addPlanetInfo( planet_b );
+}
+
+function addPlanetInfo( ship ) {
+	let style = { font: "16px Arial", fill: "white" };
+	text = game.add.text( 0, 0, "test text", style );
+	text.anchor.set( 0.5 );
+	text.x = ( ship.x + ( ship.width / 2) );
+	text.y = ( ship.y - 10 );
 }
 
 function addShip() {
-	sprite = game.add.sprite( ( ( 2 * grid_square_length ) - ( ship_width * 0.5 ) ), ( ( 6 * grid_square_length ) - ( ship_height * 0.5 ) ), "ship" );
-	sprite.anchor.set( 0.5 );
+	ship = game.add.sprite( ( ( 2 * grid_square_length ) - ( ship_width * 0.5 ) ), ( ( 6 * grid_square_length ) - ( ship_height * 0.5 ) ), "ship" );
+	ship.anchor.set( 0.5 );
 }
 
 const camera_bounds = {
@@ -71,31 +85,77 @@ function addControls() {
 
 	// up
 	game.input.keyboard.addKey( Phaser.Keyboard.UP ).onDown.add( () => {
-		sprite.y -= ( ( sprite.y - grid_square_length ) < 0 ) ? 0 : grid_square_length;
-		sprite.angle = 270;
-		updateCamera( ( sprite.x - ( grid_square_length / 2 ) ), ( sprite.y - ( grid_square_length / 2 ) ) );
+		checkPosition();
+		if ( needsFuel() && ! hasFuel() )
+			return;
+		ship.y -= ( ( ship.y - grid_square_length ) < 0 ) ? 0 : grid_square_length;
+		ship.angle = 270;
+		updateCamera( ( ship.x - ( grid_square_length / 2 ) ), ( ship.y - ( grid_square_length / 2 ) ) );
 	}, this );
 
 	// down
 	game.input.keyboard.addKey( Phaser.Keyboard.DOWN ).onDown.add( () => {
-		sprite.y += ( ( sprite.y + grid_square_length ) > game_height_pixels ) ? 0 : grid_square_length;
-		sprite.angle = 90;
-		updateCamera( ( sprite.x - ( grid_square_length / 2 ) ), ( sprite.y - ( grid_square_length / 2 ) ) );
+		checkPosition();
+		if ( needsFuel() && ! hasFuel() )
+			return;
+		ship.y += ( ( ship.y + grid_square_length ) > game_height_pixels ) ? 0 : grid_square_length;
+		ship.angle = 90;
+		updateCamera( ( ship.x - ( grid_square_length / 2 ) ), ( ship.y - ( grid_square_length / 2 ) ) );
 	}, this );
 
 	// right
 	game.input.keyboard.addKey( Phaser.Keyboard.RIGHT ).onDown.add( () => {
-		sprite.x += ( ( sprite.x + grid_square_length ) > game_width_pixels ) ? 0 : grid_square_length;
-		sprite.angle = 0;
-		updateCamera( ( sprite.x - ( grid_square_length / 2 ) ), ( sprite.y - ( grid_square_length / 2 ) ) );
+		checkPosition();
+		if ( needsFuel() && ! hasFuel() )
+			return;
+		ship.x += ( ( ship.x + grid_square_length ) > game_width_pixels ) ? 0 : grid_square_length;
+		ship.angle = 0;
+		updateCamera( ( ship.x - ( grid_square_length / 2 ) ), ( ship.y - ( grid_square_length / 2 ) ) );
 	}, this );
 
 	// left
 	game.input.keyboard.addKey( Phaser.Keyboard.LEFT ).onDown.add( () => {
-		sprite.x -= ( ( sprite.x - grid_square_length ) < 0 ) ? 0 : grid_square_length;
-		sprite.angle = 180;
-		updateCamera( ( sprite.x - ( grid_square_length / 2 ) ), ( sprite.y - ( grid_square_length / 2 ) ) );
+		checkPosition();
+		if ( needsFuel() && ! hasFuel() )
+			return;
+		ship.x -= ( ( ship.x - grid_square_length ) < 0 ) ? 0 : grid_square_length;
+		ship.angle = 180;
+		updateCamera( ( ship.x - ( grid_square_length / 2 ) ), ( ship.y - ( grid_square_length / 2 ) ) );
 	}, this );
+}
+
+function updateFuel( increment, set ) {
+	if ( set )
+		fuel = increment;
+	else
+		fuel += increment;
+
+	if ( fuel < 0 )
+		fuel = 0;
+	
+	console.log( "Fuel [%s]", fuel );
+}
+
+function needsFuel() {
+	return true;
+}
+
+function hasFuel() {
+	return ( fuel > 0 );
+}
+
+function arrivePlanet() {
+	updateFuel( max_fuel, true );
+}
+
+function checkPosition() {
+
+	if ( ship.overlap( planet_a ) )
+		arrivePlanet();
+	else if ( ship.overlap( planet_b ) )
+		arrivePlanet();
+	else
+		updateFuel( -1 );
 }
 
 function create() {
@@ -121,7 +181,9 @@ function create() {
 
 }
 
-function update() {}
+function update() {
+
+}
 
 
 function render() {}
