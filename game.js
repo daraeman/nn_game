@@ -312,6 +312,7 @@ function create() {
 	addShip();
 	addControls();
 	addMenu();
+	updateFogOfWar();
 }
 
 function update() {
